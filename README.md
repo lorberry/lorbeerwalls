@@ -1,6 +1,6 @@
 # lorbeerwalls
 
-an auto-updating wallhack for cs2, written in java
+an auto-updating wallhack cheat for cs2, written in java
 
 ## why?
 1 mouseclick, no brain, no vacban, just run it
