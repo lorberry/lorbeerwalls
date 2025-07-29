@@ -3,18 +3,18 @@
 an auto-updating wallhack for cs2, written in java
 
 ## why?
-→ 1 mouseclick, no brain, no vacban, just run it
+1 mouseclick, no brain, no vacban, just run it
 
-→ lorbeerwalls is always updated automatically, so dont worry about game updates
+lorbeerwalls is always updated automatically, so dont worry about game updates
 
 ## for developers
-→ the project is full-opensrc documented and well structured. just have a look at the source code :)
+the project is full-opensrc documented and well structured. just have a look at the source code :)
 
-→ you can skid, sell, steal the source code, just do what you want with this
+you can skid, sell, steal the source code, just do what you want with this
 
 ## kernel-driver
 
-→ lorbeerwalls is supported by the LorbeerKernelDriver™ + the complete cheat is read-only, so you will not be banned, and you can use the cheat in comp as well
+lorbeerwalls is supported by the LorbeerKernelDriver™ + the complete cheat is read-only, so you will not be banned, and you can use the cheat in comp as well
 
 ## pls dont cheat
 i created the whole project for fun and interest, counter strike already has enough cheaters :) so please just use this cheat to learn!
