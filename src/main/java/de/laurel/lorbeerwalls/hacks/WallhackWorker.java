@@ -1,48 +1,42 @@
 package de.laurel.lorbeerwalls.hacks;
 
+import com.sun.jna.Pointer;
 import de.laurel.lorbeerwalls.process.GameProcess;
 import de.laurel.lorbeerwalls.sdk.EnemyData;
 import de.laurel.lorbeerwalls.sdk.Offsets;
 import de.laurel.lorbeerwalls.structs.Vector3;
 import de.laurel.lorbeerwalls.ui.MainGUI;
 import de.laurel.lorbeerwalls.ui.WallhackOverlay;
-import de.laurel.lorbeerwalls.utils.MathUtils;
 import de.laurel.lorbeerwalls.utils.LorbeerKernelDriver;
+import de.laurel.lorbeerwalls.utils.MathUtils;
 
 import javax.swing.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-/**
- * SwingWorker for handling the wallhack logic in background
- * @author lorberry+chatgpt
- */
 public class WallhackWorker extends SwingWorker<Void, Object> {
 
-    /** main user interface instance */
     private final MainGUI mainGUI;
-    /** overlay window for drawing */
     private final WallhackOverlay overlay;
-    /** game process handler */
     private GameProcess workerGameProcess;
 
-    /**
-     * creates a new wallhack worker
-     * @param mainGUI the main gui
-     * @param overlay the overlay to draw on
-     */
+    public static final int[][] BONE_CONNECTIONS = {
+            {6, 5}, {5, 4}, {4, 3}, {3, 0},
+            {4, 8}, {8, 9}, {9, 10},
+            {4, 13}, {13, 14}, {14, 15},
+            {0, 22}, {22, 23}, {23, 24},
+            {0, 26}, {26, 27}, {27, 28}
+    };
+
     public WallhackWorker(MainGUI mainGUI, WallhackOverlay overlay) {
         this.mainGUI = mainGUI;
         this.overlay = overlay;
     }
 
-    /**
-     * main loop for reading game data
-     * @return null
-     * @throws Exception on error
-     */
     @Override
     protected Void doInBackground() throws Exception {
         publish("initializing gameprocess");
@@ -61,7 +55,7 @@ public class WallhackWorker extends SwingWorker<Void, Object> {
         while (!isCancelled()) {
             List<EnemyData> currentFrameEnemies = new ArrayList<>();
 
-            com.sun.jna.Pointer viewMatrixPtr = memory.readMemory(clientBase + offsets.dwViewMatrix, 16 * 4);
+            Pointer viewMatrixPtr = memory.readMemory(clientBase + offsets.dwViewMatrix, 16 * 4);
             if (viewMatrixPtr == null) {
                 Thread.sleep(16);
                 continue;
@@ -99,27 +93,40 @@ public class WallhackWorker extends SwingWorker<Void, Object> {
                 if (health <= 0 || health > 100) continue;
 
                 int team = memory.readInt(entityPawn + offsets.m_iTeamNum);
-                if (team == localTeam) continue;
+                //if (team == localTeam) continue;
 
-                Vector3 enemyPos = memory.readVector3(entityPawn + offsets.m_vOldOrigin);
-                if (enemyPos == null) continue;
+                long gameSceneNode = memory.readLong(entityPawn + offsets.m_pGameSceneNode);
+                if (gameSceneNode == 0) continue;
 
-                Point2D.Float screenPos = MathUtils.worldToScreen(enemyPos, viewMatrix, overlay.getWidth(), overlay.getHeight());
-                if (screenPos != null) {
-                    currentFrameEnemies.add(new EnemyData(screenPos, health));
+                long boneMatrixAddress = memory.readLong(gameSceneNode + offsets.m_modelState + 0x80);
+                if (boneMatrixAddress == 0) continue;
+
+                Pointer boneMatrixPtr = memory.readMemory(boneMatrixAddress, 30 * 32);
+                if (boneMatrixPtr == null) continue;
+
+                Map<Integer, Point2D.Float> bonePositions = new HashMap<>();
+                for (int boneId = 0; boneId < 30; boneId++) {
+                    float x = boneMatrixPtr.getFloat((long) boneId * 32);
+                    float y = boneMatrixPtr.getFloat((long) boneId * 32 + 4);
+                    float z = boneMatrixPtr.getFloat((long) boneId * 32 + 8);
+                    Vector3 bonePos = new Vector3(x,y,z);
+                    Point2D.Float screenPos = MathUtils.worldToScreen(bonePos, viewMatrix, overlay.getWidth(), overlay.getHeight());
+                    if (screenPos != null) {
+                        bonePositions.put(boneId, screenPos);
+                    }
+                }
+
+                if(!bonePositions.isEmpty()){
+                    currentFrameEnemies.add(new EnemyData(bonePositions, health));
                 }
             }
 
             publish(currentFrameEnemies);
-            Thread.sleep(1000 / 120);
+            Thread.sleep(1000 / 144);
         }
         return null;
     }
 
-    /**
-     * updates gui with data from background thread
-     * @param chunks data chunks to process
-     */
     @Override
     protected void process(List<Object> chunks) {
         for (Object chunk : chunks) {
@@ -135,9 +142,6 @@ public class WallhackWorker extends SwingWorker<Void, Object> {
         }
     }
 
-    /**
-     * cleans up resources after worker finishes
-     */
     @Override
     protected void done() {
         try {

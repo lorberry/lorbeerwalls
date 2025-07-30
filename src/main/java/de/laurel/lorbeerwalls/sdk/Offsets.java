@@ -10,13 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * fetches and stores game memory offsets
- * @author lorberry+chatgpt
- */
 public class Offsets {
     private static final String OFFSETS_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/offsets.json";
-    private static final String CLIENT_DLL_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/refs/heads/main/output/client_dll.json";
+    private static final String CLIENT_DLL_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/client_dll.json";
 
     private final Map<String, Integer> offsetMap = new HashMap<>();
     private final Consumer<String> logger;
@@ -26,21 +22,15 @@ public class Offsets {
     public int dwLocalPlayerPawn;
     public int m_iHealth;
     public int m_iTeamNum;
-    public int m_vOldOrigin;
     public int m_hPlayerPawn;
+    public int m_pGameSceneNode;
+    public int m_modelState;
 
-    /**
-     * creates an offsets manager
-     * @param logger logger for status messages
-     */
+
     public Offsets(Consumer<String> logger) {
         this.logger = logger;
     }
 
-    /**
-     * loads all offsets from web sources
-     * @return true on success false on failure
-     */
     public boolean load() {
         logger.accept("loading offsets");
         try {
@@ -55,13 +45,6 @@ public class Offsets {
         }
     }
 
-    /**
-     * downloads and parses a json file
-     * @param url the url to download from
-     * @param parser the consumer to parse the content
-     * @param fileName the name for logging
-     * @throws Exception on download or parsing error
-     */
     private void fetchAndParse(String url, Consumer<String> parser, String fileName) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
@@ -75,10 +58,6 @@ public class Offsets {
         }
     }
 
-    /**
-     * parses offsets json
-     * @param jsonContent the json string
-     */
     private void parseAndStoreOffsets(String jsonContent) {
         JSONObject root = new JSONObject(jsonContent);
         JSONObject clientDllOffsets = root.getJSONObject("client.dll");
@@ -87,10 +66,6 @@ public class Offsets {
         }
     }
 
-    /**
-     * parses client dll json
-     * @param jsonContent the json string
-     */
     private void parseAndStoreClientDll(String jsonContent) {
         JSONObject root = new JSONObject(jsonContent);
         JSONObject clientDll = root.getJSONObject("client.dll");
@@ -106,25 +81,18 @@ public class Offsets {
         }
     }
 
-    /**
-     * assigns parsed values to fields
-     */
     private void assignOffsets() {
         dwEntityList = get("dwEntityList");
         dwViewMatrix = get("dwViewMatrix");
         dwLocalPlayerPawn = get("dwLocalPlayerPawn");
         m_iHealth = get("m_iHealth");
         m_iTeamNum = get("m_iTeamNum");
-        m_vOldOrigin = get("m_vOldOrigin");
         m_hPlayerPawn = get("m_hPlayerPawn");
+        m_pGameSceneNode = get("m_pGameSceneNode");
+        m_modelState = get("m_modelState");
         logger.accept("all offsets assigned");
     }
 
-    /**
-     * gets an offset value by name
-     * @param name the name of the offset
-     * @return the offset value
-     */
     private int get(String name) {
         if (!offsetMap.containsKey(name)) {
             logger.accept("error offset '" + name + "' not found");
