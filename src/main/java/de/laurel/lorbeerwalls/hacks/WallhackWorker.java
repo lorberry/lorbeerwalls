@@ -93,7 +93,7 @@ public class WallhackWorker extends SwingWorker<Void, Object> {
                 if (health <= 0 || health > 100) continue;
 
                 int team = memory.readInt(entityPawn + offsets.m_iTeamNum);
-                //if (team == localTeam) continue;
+                if (mainGUI.isTeamCheckEnabled() && team == localTeam) continue;
 
                 long gameSceneNode = memory.readLong(entityPawn + offsets.m_pGameSceneNode);
                 if (gameSceneNode == 0) continue;
@@ -120,9 +120,8 @@ public class WallhackWorker extends SwingWorker<Void, Object> {
                     currentFrameEnemies.add(new EnemyData(bonePositions, health));
                 }
             }
-
             publish(currentFrameEnemies);
-            Thread.sleep(1000 / 144);
+            Thread.sleep(1000 / mainGUI.getMaxFps());
         }
         return null;
     }

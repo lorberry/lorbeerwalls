@@ -4,36 +4,63 @@ import de.laurel.lorbeerwalls.hacks.WallhackWorker;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 
-/**
- * main user interface window for the tool
- * @author lorberry+chatgpt
- */
 public class MainGUI extends JFrame {
 
-    /** checkbox to toggle the hack */
-    private final JCheckBox wallhackCheckBox;
-    /** textarea for logging */
+    private final JButton toggleHackButton;
+    private final JCheckBox teamCheckCheckBox;
+    private final JCheckBox healthBarCheckBox;
+    private final JCheckBox skeletonEspCheckBox;
+    private final JSlider maxFpsSlider;
+    private final JLabel maxFpsLabel;
     private final JTextArea logArea;
-    /** background worker instance */
     private WallhackWorker wallhackWorker;
-    /** drawing overlay instance */
     private WallhackOverlay overlay;
 
-    /**
-     * creates the main gui
-     */
     public MainGUI() {
         setTitle("LorbeerWalls");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setSize(400, 400);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JPanel controlPanel = new JPanel();
-        wallhackCheckBox = new JCheckBox("load walls");
-        controlPanel.add(wallhackCheckBox);
+        JPanel controlPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        toggleHackButton = new JButton("Load");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        controlPanel.add(toggleHackButton, gbc);
+
+        gbc.gridwidth = 1;
+
+        maxFpsLabel = new JLabel("max fps: 144");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        controlPanel.add(maxFpsLabel, gbc);
+
+        maxFpsSlider = new JSlider(30, 300, 144);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        controlPanel.add(maxFpsSlider, gbc);
+
+        teamCheckCheckBox = new JCheckBox("team check", true);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        controlPanel.add(teamCheckCheckBox, gbc);
+
+        skeletonEspCheckBox = new JCheckBox("skeleton esp", true);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        controlPanel.add(skeletonEspCheckBox, gbc);
+
+        healthBarCheckBox = new JCheckBox("healthbar", true);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        controlPanel.add(healthBarCheckBox, gbc);
 
         logArea = new JTextArea();
         logArea.setEditable(false);
@@ -44,57 +71,61 @@ public class MainGUI extends JFrame {
 
         printToLog("gui initialized");
 
-        wallhackCheckBox.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
+        toggleHackButton.addActionListener(e -> {
+            if (wallhackWorker == null || wallhackWorker.isDone()) {
                 startWallhack();
             } else {
                 stopWallhack();
             }
         });
+
+        maxFpsSlider.addChangeListener(e -> maxFpsLabel.setText("max fps: " + maxFpsSlider.getValue()));
     }
 
-    /**
-     * starts the wallhack feature
-     */
     private void startWallhack() {
         printToLog("starting wallhack");
-        wallhackCheckBox.setEnabled(false);
-        overlay = new WallhackOverlay();
+        toggleHackButton.setText("Unload");
+        overlay = new WallhackOverlay(this);
         overlay.setVisible(true);
-
         wallhackWorker = new WallhackWorker(this, overlay);
         wallhackWorker.execute();
     }
 
-    /**
-     * stops the wallhack feature
-     */
     private void stopWallhack() {
         printToLog("stopping wallhack");
+        toggleHackButton.setEnabled(false);
         if (wallhackWorker != null && !wallhackWorker.isDone()) {
             wallhackWorker.cancel(true);
         }
     }
 
-    /**
-     * callback for when the wallhack stops
-     */
     public void onWallhackStopped() {
         if (overlay != null) {
             overlay.setVisible(false);
             overlay.dispose();
             overlay = null;
         }
-        wallhackCheckBox.setEnabled(true);
-        if (wallhackCheckBox.isSelected()) {
-            wallhackCheckBox.setSelected(false);
-        }
+        toggleHackButton.setText("Load");
+        toggleHackButton.setEnabled(true);
+        wallhackWorker = null;
     }
 
-    /**
-     * prints a message to the log area
-     * @param message message to print
-     */
+    public boolean isTeamCheckEnabled() {
+        return teamCheckCheckBox.isSelected();
+    }
+
+    public boolean isHealthBarEnabled() {
+        return healthBarCheckBox.isSelected();
+    }
+
+    public boolean isSkeletonEspEnabled() {
+        return skeletonEspCheckBox.isSelected();
+    }
+
+    public int getMaxFps() {
+        return maxFpsSlider.getValue();
+    }
+
     public void printToLog(String message) {
         SwingUtilities.invokeLater(() -> logArea.append(message + "\n"));
     }
