@@ -25,7 +25,5 @@ thanks to a2x, without your dumper lorberwalls would not work :)
 ## images
 
 ### the wallhack (screenshot was taken in a bot lobby)
-<img width="765" height="344" alt="Screenshot 2025-07-29 220324" src="https://github.com/user-attachments/assets/de697b31-e480-47f0-8c72-1ff3618983a9" />
 
-### the gui (swing)
-<img width="382" height="287" alt="Screenshot 2025-07-29 220437" src="https://github.com/user-attachments/assets/04a420aa-74df-4a32-82ff-dc9aac64bfe1" />
+<img width="426" height="263" alt="image" src="https://github.com/user-attachments/assets/9299f93f-b8f5-48ba-9b20-6d3e5abd4cc7" />
